@@ -50,13 +50,25 @@ def anchors():
     return np.array(pts), np.array(keep)
 
 
+# Tone is deliberately kept on a short leash. Left free, the solve will
+# happily return something like gain 1.46 / bias -102 on the blue channel —
+# that is not colour matching, it is destroying the photograph to chase
+# anchors it cannot otherwise reach. Clamped, the search instead prefers a
+# crop that genuinely resembles the prototype.
+GAIN_RANGE = (0.85, 1.15)
+BIAS_RANGE = (-25.0, 25.0)
+
+
 def solve_tone(sample, target):
-    """Least-squares gain and bias per channel: target ~= gain*sample + bias."""
+    """Least-squares gain and bias per channel, clamped to a mild correction."""
     gain = np.zeros(3)
     bias = np.zeros(3)
     for k in range(3):
         A = np.stack([sample[:, k], np.ones(len(sample))], axis=1)
         (g, b), *_ = np.linalg.lstsq(A, target[:, k], rcond=None)
+        g = float(np.clip(g, *GAIN_RANGE))
+        # re-solve the offset for the clamped gain so the pair stays consistent
+        b = float(np.clip(np.mean(target[:, k] - g * sample[:, k]), *BIAS_RANGE))
         gain[k], bias[k] = g, b
     return gain, bias
 
