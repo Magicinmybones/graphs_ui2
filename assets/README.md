@@ -1,10 +1,11 @@
-# Card background asset
+# Card background source
 
-The supplied background photograph is committed here as `card-bg.png`.
-Rebuild the page after replacing it:
+`card-bg.png` is the supplied source photograph. To replace it, regenerate
+the fitted card image and rebuild the page:
 
+    python tools/bg_place.py assets/card-bg.png
     python tools/build.py
 
-`build.py` writes `index.html` with a direct `assets/card-bg.png`
-reference. When the asset is absent, it uses the fitted SVG colour mesh
-as a fallback so the page still builds.
+`bg_place.py` writes `tools/card-bg-fitted.webp`. `build.py` embeds that fitted
+image directly into `index.html`; when it is unavailable, the build falls back
+to `tools/mesh.svg`.
