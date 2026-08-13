@@ -6,13 +6,19 @@
 <title>Built for every team that influences growth</title>
 <script>
 /* Establish entrance states before first paint. If the main script cannot
-   run, the fallback restores the authored static page automatically. */
+   run, the fallback restores the authored static page automatically.
+
+   The net covers one failure only: the entrance script never executing. It
+   must not expire while the document is still arriving, or a slow connection
+   would cancel the entrance instead of protecting it — so the entrance script
+   clears this timer the moment it runs, and the window here is wide enough to
+   outlast a slow first load rather than race it. */
 (function () {
   if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
   document.documentElement.classList.add('entrance-pending');
   window.__entranceFallback = window.setTimeout(function () {
     document.documentElement.classList.remove('entrance-pending');
-  }, 3200);
+  }, 12000);
 })();
 </script>
 <style>
@@ -784,15 +790,24 @@ html.entrance-pending .stat{
    --------------------------------------------------------------- */
 (function () {
   var root = document.documentElement;
-  var fallback = window.__entranceFallback;
   var active = [];
+  var started = false, done = false;
+
+  /* Reaching this line is proof the entrance script runs, which is the only
+     thing the head-parse net guards against. Cancel it first, before any
+     early return: left armed it would fire mid-entrance on a slow load and
+     strip the first-paint states out from under the animations. */
+  if (window.__entranceFallback) {
+    window.clearTimeout(window.__entranceFallback);
+    window.__entranceFallback = 0;
+  }
 
   var finish = function () {
+    if (done) return;
+    done = true;
     root.classList.remove('entrance-pending');
     active.forEach(function (animation) { animation.cancel(); });
     active = [];
-    if (fallback) window.clearTimeout(fallback);
-    window.__entranceFallback = 0;
   };
 
   if (!root.classList.contains('entrance-pending')) return;
@@ -818,57 +833,67 @@ html.entrance-pending .stat{
     }));
   };
 
-  /* Two frames ensure the first-paint states are committed before motion. */
-  requestAnimationFrame(function () {
-    requestAnimationFrame(function () {
-      var lines = document.querySelectorAll('.headline-line');
+  var start = function () {
+    if (started || done) return;
+    started = true;
 
-      play(document.querySelector('.rule'),
-           [{transform:'scaleX(0)'},{transform:'scaleX(1)'}],
-           650,60,easeStructure);
+    var lines = document.querySelectorAll('.headline-line');
 
-      play(lines[0],
-           [{opacity:.01,transform:'translate3d(0,' + rise + 'px,0)'},
-            {opacity:1,transform:'translate3d(0,0,0)'}],
-           720,180,easeReveal);
-      play(lines[1],
-           [{opacity:.01,transform:'translate3d(0,' + rise + 'px,0)'},
-            {opacity:1,transform:'translate3d(0,0,0)'}],
-           760,300,easeReveal);
+    play(document.querySelector('.rule'),
+         [{transform:'scaleX(0)'},{transform:'scaleX(1)'}],
+         650,60,easeStructure);
 
-      play(document.querySelector('.grid'),
-           [{opacity:0,clipPath:'inset(0 100% 0 0)'},
-            {opacity:1,clipPath:'inset(0 0 0 0)'}],
-           720,430,easeStructure);
-      play(document.querySelector('.acc'),
-           [{opacity:.01,clipPath:'inset(0 0 100% 0)'},
-            {opacity:1,clipPath:'inset(0 0 0 0)'}],
-           740,650,easeStructure);
+    play(lines[0],
+         [{opacity:.01,transform:'translate3d(0,' + rise + 'px,0)'},
+          {opacity:1,transform:'translate3d(0,0,0)'}],
+         720,180,easeReveal);
+    play(lines[1],
+         [{opacity:.01,transform:'translate3d(0,' + rise + 'px,0)'},
+          {opacity:1,transform:'translate3d(0,0,0)'}],
+         760,300,easeReveal);
 
-      play(document.querySelector('.bar-ghost'),
-           [{transform:'scaleY(0)'},{transform:'scaleY(1)'}],
-           860,720,easeReveal);
-      play(document.querySelector('.bar-blue'),
-           [{transform:'scaleY(0)'},{transform:'scaleY(1)'}],
-           900,790,easeReveal);
-      play(document.querySelector('.bar-cap'),
-           [{opacity:0,transform:'translate3d(0,6px,0)'},
-            {opacity:1,transform:'translate3d(0,0,0)'}],
-           460,1050,easeSupport);
-      play(document.querySelector('.stat-label'),
-           [{opacity:0,transform:'translate3d(0,6px,0)'},
-            {opacity:1,transform:'translate3d(0,0,0)'}],
-           480,1060,easeSupport);
-      play(document.querySelector('.stat'),
-           [{opacity:0,transform:'translate3d(0,8px,0)'},
-            {opacity:1,transform:'translate3d(0,0,0)'}],
-           620,1140,easeReveal);
+    play(document.querySelector('.grid'),
+         [{opacity:0,clipPath:'inset(0 100% 0 0)'},
+          {opacity:1,clipPath:'inset(0 0 0 0)'}],
+         720,430,easeStructure);
+    play(document.querySelector('.acc'),
+         [{opacity:.01,clipPath:'inset(0 0 100% 0)'},
+          {opacity:1,clipPath:'inset(0 0 0 0)'}],
+         740,650,easeStructure);
 
-      Promise.all(active.map(function (animation) {
-        return animation.finished.catch(function () {});
-      })).then(finish);
-    });
-  });
+    play(document.querySelector('.bar-ghost'),
+         [{transform:'scaleY(0)'},{transform:'scaleY(1)'}],
+         860,720,easeReveal);
+    play(document.querySelector('.bar-blue'),
+         [{transform:'scaleY(0)'},{transform:'scaleY(1)'}],
+         900,790,easeReveal);
+    play(document.querySelector('.bar-cap'),
+         [{opacity:0,transform:'translate3d(0,6px,0)'},
+          {opacity:1,transform:'translate3d(0,0,0)'}],
+         460,1050,easeSupport);
+    play(document.querySelector('.stat-label'),
+         [{opacity:0,transform:'translate3d(0,6px,0)'},
+          {opacity:1,transform:'translate3d(0,0,0)'}],
+         480,1060,easeSupport);
+    play(document.querySelector('.stat'),
+         [{opacity:0,transform:'translate3d(0,8px,0)'},
+          {opacity:1,transform:'translate3d(0,0,0)'}],
+         620,1140,easeReveal);
+
+    Promise.all(active.map(function (animation) {
+      return animation.finished.catch(function () {});
+    })).then(finish);
+
+    /* The timeline ends well inside this. It exists so a tab that never
+       composites cannot strand the page in its first-paint states. */
+    window.setTimeout(finish, 2600);
+  };
+
+  /* Two frames ensure the first-paint states are committed before motion.
+     A hidden or backgrounded tab is never served rAF at all, so a timer
+     races it; start() is idempotent, so whichever arrives first wins. */
+  requestAnimationFrame(function () { requestAnimationFrame(start); });
+  window.setTimeout(start, 250);
 })();
 </script>
 
