@@ -4,6 +4,17 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Built for every team that influences growth</title>
+<script>
+/* Establish entrance states before first paint. If the main script cannot
+   run, the fallback restores the authored static page automatically. */
+(function () {
+  if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+  document.documentElement.classList.add('entrance-pending');
+  window.__entranceFallback = window.setTimeout(function () {
+    document.documentElement.classList.remove('entrance-pending');
+  }, 3200);
+})();
+</script>
 <style>
 /* ============================================================
    Embedded typeface — Inter (latin subset, variable 100–900).
@@ -105,6 +116,8 @@ body{
   margin-left:calc(-2 * var(--u));   /* side-bearing compensation */
 }
 .headline .accent{color:var(--blue);display:block}
+.headline-mask{display:block;overflow:hidden}
+.headline-line{display:block}
 
 /* headline box bottom (167) → Product label box top (223.4) */
 .spacer{flex:0 0 auto;height:calc(37.4 * var(--u))}
@@ -334,6 +347,52 @@ body{
 }
 
 /* ============================================================
+   ONE-TIME ENTRANCE
+   Temporary first-paint states only. The master timeline removes the
+   class and cancels every animation on completion, returning each element
+   to its untouched authored style. The card photograph (.mesh) is absent
+   by design: background imagery never moves, fades, scales or clips.
+   ============================================================ */
+html.entrance-pending .rule{
+  transform:scaleX(0);
+  transform-origin:left center;
+}
+html.entrance-pending .headline-line{
+  opacity:.01;
+  transform:translate3d(0,110%,0);
+}
+html.entrance-pending .acc{
+  opacity:.01;
+  clip-path:inset(0 0 100% 0);
+}
+html.entrance-pending .grid{
+  opacity:0;
+  clip-path:inset(0 100% 0 0);
+}
+html.entrance-pending .bar-ghost,
+html.entrance-pending .bar-blue{
+  transform:scaleY(0);
+  transform-origin:center bottom;
+}
+html.entrance-pending .bar-cap,
+html.entrance-pending .stat-label,
+html.entrance-pending .stat{
+  opacity:0;
+  transform:translate3d(0,8px,0);
+}
+html.entrance-pending .rule,
+html.entrance-pending .headline-line,
+html.entrance-pending .acc,
+html.entrance-pending .grid,
+html.entrance-pending .bar-ghost,
+html.entrance-pending .bar-blue,
+html.entrance-pending .bar-cap,
+html.entrance-pending .stat-label,
+html.entrance-pending .stat{
+  will-change:transform,opacity,clip-path;
+}
+
+/* ============================================================
    RESPONSIVE
    Desktop and laptop all land in the same place: the container
    caps at 1096 and centres, so the section keeps equal margins
@@ -365,6 +424,8 @@ body{
     white-space:normal;
   }
   .headline .accent{display:inline}
+  .headline-mask,.headline .headline-line{display:inline-block}
+  .headline-mask{vertical-align:top}
   .spacer{height:calc(34 * var(--u))}
   .item:not(.open){height:62px}
   .card{aspect-ratio:16 / 11}
@@ -393,6 +454,7 @@ body{
     letter-spacing:calc(-0.35 * var(--u));
   }
   .headline .accent{display:block}
+  .headline-mask:last-child{display:block}
   .spacer{height:clamp(12px,2.4svh,20px)}
 
   .item{
@@ -445,6 +507,19 @@ body{
 
 @media (prefers-reduced-motion: reduce){
   *{transition:none !important;animation:none !important}
+  html.entrance-pending .rule,
+  html.entrance-pending .headline-line,
+  html.entrance-pending .acc,
+  html.entrance-pending .grid,
+  html.entrance-pending .bar-ghost,
+  html.entrance-pending .bar-blue,
+  html.entrance-pending .bar-cap,
+  html.entrance-pending .stat-label,
+  html.entrance-pending .stat{
+    opacity:1;
+    transform:none;
+    clip-path:none;
+  }
 }
 </style>
 </head>
@@ -457,9 +532,8 @@ body{
   <div class="split">
 
     <section class="col">
-    <h1 class="headline">
-      Built for every team that
-      <span class="accent">influences&nbsp;growth.</span>
+    <h1 class="headline"><span class="headline-mask"><span class="headline-line">Built for every team that</span></span>
+      <span class="headline-mask"><span class="headline-line accent">influences&nbsp;growth.</span></span>
     </h1>
 
     <div class="spacer" aria-hidden="true"></div>
@@ -701,6 +775,101 @@ body{
   });
 
   settle(from);
+})();
+
+/* ---------------------------------------------------------------
+   One coordinated page entrance. Web Animations API keeps this static
+   site dependency-free and finite. When the last animation resolves, all
+   temporary effects are canceled; no entrance listener, interval, RAF loop
+   or idle motion remains.
+   --------------------------------------------------------------- */
+(function () {
+  var root = document.documentElement;
+  var fallback = window.__entranceFallback;
+  var active = [];
+
+  var finish = function () {
+    root.classList.remove('entrance-pending');
+    active.forEach(function (animation) { animation.cancel(); });
+    active = [];
+    if (fallback) window.clearTimeout(fallback);
+    window.__entranceFallback = 0;
+  };
+
+  if (!root.classList.contains('entrance-pending')) return;
+  if (!Element.prototype.animate || window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+    finish();
+    return;
+  }
+
+  var mobile = window.matchMedia('(max-width: 520px)').matches;
+  var time = function (ms) { return Math.round(ms * (mobile ? .9 : 1)); };
+  var rise = mobile ? 8 : 12;
+  var easeReveal = 'cubic-bezier(.16,1,.3,1)';
+  var easeStructure = 'cubic-bezier(.22,1,.36,1)';
+  var easeSupport = 'cubic-bezier(.2,.8,.2,1)';
+
+  var play = function (element, frames, duration, delay, easing) {
+    if (!element) return;
+    active.push(element.animate(frames, {
+      duration:time(duration),
+      delay:time(delay),
+      easing:easing,
+      fill:'both'
+    }));
+  };
+
+  /* Two frames ensure the first-paint states are committed before motion. */
+  requestAnimationFrame(function () {
+    requestAnimationFrame(function () {
+      var lines = document.querySelectorAll('.headline-line');
+
+      play(document.querySelector('.rule'),
+           [{transform:'scaleX(0)'},{transform:'scaleX(1)'}],
+           650,60,easeStructure);
+
+      play(lines[0],
+           [{opacity:.01,transform:'translate3d(0,' + rise + 'px,0)'},
+            {opacity:1,transform:'translate3d(0,0,0)'}],
+           720,180,easeReveal);
+      play(lines[1],
+           [{opacity:.01,transform:'translate3d(0,' + rise + 'px,0)'},
+            {opacity:1,transform:'translate3d(0,0,0)'}],
+           760,300,easeReveal);
+
+      play(document.querySelector('.grid'),
+           [{opacity:0,clipPath:'inset(0 100% 0 0)'},
+            {opacity:1,clipPath:'inset(0 0 0 0)'}],
+           720,430,easeStructure);
+      play(document.querySelector('.acc'),
+           [{opacity:.01,clipPath:'inset(0 0 100% 0)'},
+            {opacity:1,clipPath:'inset(0 0 0 0)'}],
+           740,650,easeStructure);
+
+      play(document.querySelector('.bar-ghost'),
+           [{transform:'scaleY(0)'},{transform:'scaleY(1)'}],
+           860,720,easeReveal);
+      play(document.querySelector('.bar-blue'),
+           [{transform:'scaleY(0)'},{transform:'scaleY(1)'}],
+           900,790,easeReveal);
+      play(document.querySelector('.bar-cap'),
+           [{opacity:0,transform:'translate3d(0,6px,0)'},
+            {opacity:1,transform:'translate3d(0,0,0)'}],
+           460,1050,easeSupport);
+      play(document.querySelector('.stat-label'),
+           [{opacity:0,transform:'translate3d(0,6px,0)'},
+            {opacity:1,transform:'translate3d(0,0,0)'}],
+           480,1060,easeSupport);
+      play(document.querySelector('.stat'),
+           [{opacity:0,transform:'translate3d(0,8px,0)'},
+            {opacity:1,transform:'translate3d(0,0,0)'}],
+           620,1140,easeReveal);
+
+      Promise.all(active.map(function (animation) {
+        return animation.finished.catch(function () {});
+      })).then(finish);
+    });
+  });
 })();
 </script>
 
