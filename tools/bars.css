@@ -1,0 +1,49 @@
+/* ---- bars ---------------------------------------------------
+   Frame coordinates -> card percentages (card is 558 x 438):
+     ghost bar    x 747→827   y 320→521
+     cap segment  x 878→958   y 205→226
+     gap          x 878→958   y 226→232   nothing drawn: the photograph
+                                          shows through it
+     primary bar  x 878→958   y 232→521
+   Both bars are 80/558 = 14.337% wide.
+
+   Gradient stops sit exactly at the y positions sampled off the reference
+   and were fitted by rendering, measuring and correcting, so each stop is
+   responsible for one measured colour.
+   ------------------------------------------------------------ */
+
+/* Frosted glass. Alpha falls 0.58 -> 0.40 down the bar and
+   the tint travels cool -> warm, following the backdrop underneath it,
+   which runs steel-blue at the top and cream at the floor. */
+.bar-ghost{
+  position:absolute;
+  left:28.495%;width:14.337%;top:54.110%;bottom:0;
+  background:linear-gradient(180deg,
+    rgba(228,241,255,0.58) 2.488%,
+    rgba(216,227,235,0.44) 49.751%,
+    rgba(249,250,246,0.40) 97.015%);
+  -webkit-backdrop-filter:blur(calc(2*var(--u))) saturate(106%);
+  backdrop-filter:blur(calc(2*var(--u))) saturate(106%);
+  box-shadow:inset 0 calc(1*var(--u)) 0 rgba(255,255,255,.22),
+             inset calc(1*var(--u)) 0 0 rgba(255,255,255,.13);
+}
+
+/* Opaque, and no outer bloom — the reference keeps these edges crisp
+   against the photograph. */
+.bar-blue{
+  position:absolute;
+  left:51.971%;width:14.337%;top:34.018%;bottom:0;
+  background:linear-gradient(180deg,
+    rgb(27,101,225) 2.768%,
+    rgb(20,89,211) 33.910%,
+    rgb(17,79,198) 65.052%,
+    rgb(13,74,184) 97.924%);
+  box-shadow:inset calc(1.2*var(--u)) 0 0 rgba(255,255,255,.10);
+}
+
+.bar-cap{
+  position:absolute;
+  left:51.971%;width:14.337%;top:27.854%;height:4.795%;
+  background:rgb(26,104,230);
+  box-shadow:inset calc(1.2*var(--u)) 0 0 rgba(255,255,255,.12);
+}

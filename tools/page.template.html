@@ -1,0 +1,469 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Built for every team that influences growth</title>
+<style>
+/* ============================================================
+   Embedded typeface — Inter (latin subset, variable 100–900).
+   Base64-inlined so the file is fully self-contained / offline.
+   ============================================================ */
+@font-face{
+  font-family:'Inter';
+  font-style:normal;
+  font-weight:100 900;
+  font-display:block;
+  src:url(data:font/woff2;base64,__INTER_B64__) format('woff2');
+}
+
+/* ============================================================
+   REFERENCE FRAME  ·  1146 × 577
+   Horizontal anchors -> % of 1146  (vw)
+   Vertical anchors   -> % of  577  (vh)
+   Glyph / stroke / radius sizes -> --u  (uniform, never distorts)
+   ============================================================ */
+:root{
+  /* Height-driven so the design always fills the viewport top to
+     bottom (no letterbox bands); width-capped so type can’t overflow. */
+  --u: min(100vh / 577, 100vw / 1000);
+
+  --bg-1:#fdfdfe;
+  --bg-2:#f4f7fa;
+  --bg-3:#edf2f7;
+  --rule:#e3e6e9;
+  --divider:#e5e8ea;
+  --ink:#14171b;
+  --ink-row:#16191d;
+  --blue:#0b61d6;
+  --muted:#6f7680;
+  --marker:#3c4149;
+
+  --grid:rgba(255,255,255,.20);
+  --bar-blue-a:#1b66e2;
+  --bar-blue-b:#1054cc;
+  --bar-blue-c:#093ca4;
+  --bar-cap-a:#2a79f2;
+  --bar-cap-b:#1664e2;
+}
+
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%}
+
+body{
+  font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',
+              'Helvetica Neue',Helvetica,Arial,sans-serif;
+  background:linear-gradient(152deg,var(--bg-1) 0%,var(--bg-2) 56%,var(--bg-3) 100%);
+  color:var(--ink);
+  -webkit-font-smoothing:antialiased;
+  -moz-osx-font-smoothing:grayscale;
+  font-synthesis:none;
+  overflow:hidden;
+}
+
+/* ---- stage: fills the viewport edge-to-edge, always ---------- */
+.stage{
+  position:fixed;
+  inset:0;
+  overflow:hidden;
+  background:linear-gradient(152deg,var(--bg-1) 0%,var(--bg-2) 56%,var(--bg-3) 100%);
+}
+
+/* ---- top hairline · x 25→1121 · y 45 · 1px #e3e6e9 ---------- */
+.rule{
+  position:absolute;
+  left:2.182vw;
+  right:2.182vw;
+  top:7.799vh;
+  height:max(1px, calc(1 * var(--u)));
+  background:var(--rule);
+}
+
+/* ============================================================
+   LEFT COLUMN · x 25→558 · y 79 (headline box) → 545 (last rule)
+   ============================================================ */
+.col{
+  position:absolute;
+  left:2.182vw;
+  width:46.510vw;
+  top:14.038vh;                    /* 81  / 577  */
+  bottom:5.546vh;                  /* 545 / 577  */
+  display:flex;
+  flex-direction:column;
+}
+
+/* headline · 27px / 44px · w600 · tracking -0.60 · ink 25→324 */
+.headline{
+  flex:0 0 auto;
+  font-size:calc(27 * var(--u));
+  line-height:calc(44 * var(--u));
+  font-weight:600;
+  letter-spacing:calc(-0.60 * var(--u));
+  color:var(--ink);
+  white-space:nowrap;
+  margin-left:calc(-2 * var(--u));   /* side-bearing compensation */
+}
+.headline .accent{color:var(--blue);display:block}
+
+/* headline box bottom (167) → Product label box top (223.4) */
+.spacer{flex:0 0 auto;height:calc(56.4 * var(--u))}
+
+/* ============================================================
+   ACCORDION · rules at 288 / 352.25 / 416.5 / 480.75 / 545
+   ============================================================ */
+.acc{flex:1 1 auto;display:flex;flex-direction:column;min-height:0}
+
+.item{
+  display:flex;
+  flex-direction:column;
+  justify-content:center;
+  border-bottom:max(1px, calc(1 * var(--u))) solid var(--divider);
+  flex:1 1 0;
+  min-height:0;
+}
+/* closed rows: label cap-centre sits 5px above the row centre */
+.item:not(.open){padding-bottom:calc(10 * var(--u))}
+/* open row is intrinsic: label 21 + gap 7.1 + desc 15 + 19.5 = 62.6 */
+.item.open{flex:0 0 auto;padding-bottom:calc(19.5 * var(--u))}
+
+.row{
+  display:flex;
+  align-items:center;
+  background:none;border:0;padding:0;width:100%;
+  font:inherit;color:inherit;text-align:left;cursor:pointer;
+  -webkit-tap-highlight-color:transparent;
+}
+.row:focus-visible{outline:calc(2*var(--u)) solid var(--blue);outline-offset:calc(3*var(--u))}
+
+/* marker gutters: square → label at x48 · chevron → label at x50 */
+.marker{
+  flex:0 0 calc(25 * var(--u));
+  height:calc(16 * var(--u));
+  display:flex;
+  align-items:center;
+  padding-left:calc(7 * var(--u));
+  margin-top:calc(-4.6 * var(--u));   /* align glyph to cap-centre */
+}
+.item.open .marker{flex:0 0 calc(23 * var(--u));padding-left:0}
+
+/* both glyphs live in the DOM; CSS picks one, so opening a row is a class
+   toggle rather than a DOM rebuild */
+.marker svg{display:block;overflow:visible}
+.marker .sq{width:calc(12 * var(--u));height:calc(12 * var(--u))}
+.marker .cv{width:calc(6 * var(--u));height:calc(10 * var(--u))}
+.marker rect{stroke:var(--blue);stroke-width:1.4}
+.marker path{fill:var(--marker)}
+.item .sq,.item.open .cv{display:none}
+.item.open .sq{display:block}
+
+/* row label · 16.5px / 21px · #16191d · ink from x 50 */
+.label{
+  font-size:calc(16.5 * var(--u));
+  line-height:calc(21 * var(--u));
+  font-weight:400;
+  letter-spacing:calc(-0.08 * var(--u));
+  color:var(--ink-row);
+  transition:color .18s ease;
+}
+.item.open .label{color:var(--blue);font-weight:550}
+
+/* description · 10.9px / 15px · #6f7680 · ink 25→288 */
+.desc{
+  font-size:calc(10.9 * var(--u));
+  line-height:calc(15 * var(--u));
+  font-weight:400;
+  letter-spacing:calc(0.02 * var(--u));
+  color:var(--muted);
+  padding-top:calc(7.1 * var(--u));
+  overflow:hidden;
+}
+.item:not(.open) .desc{display:none}
+
+/* ============================================================
+   RIGHT CARD · x 588→1146 (bleeds right) · y 83→521 · r 8
+   ============================================================ */
+.card{
+  position:absolute;
+  left:51.309vw;
+  right:0;
+  top:14.385vh;
+  bottom:9.705vh;
+  border-radius:calc(8 * var(--u)) 0 0 calc(8 * var(--u));
+  overflow:hidden;
+  isolation:isolate;
+  box-shadow:0 calc(2*var(--u)) calc(16*var(--u)) rgba(16,32,56,.10);
+}
+
+/* ---- background: blurred-photograph mesh --------------------
+   Modelled the way the original actually is: a grid of averaged
+   colours put through one Gaussian blur. The grid was fitted by
+   deconvolution against colours sampled from the reference, so the
+   blur reproduces those samples rather than washing them out.
+   preserveAspectRatio="none" lets it stretch with the card.
+   ------------------------------------------------------------ */
+.mesh{
+  position:absolute;
+  inset:0;
+  width:100%;
+  height:100%;
+  display:block;
+}
+.mesh-film{
+  position:absolute;inset:0;pointer-events:none;
+  background:linear-gradient(180deg,rgba(255,255,255,.05) 0%,rgba(255,255,255,0) 32%,rgba(0,0,0,.045) 100%);
+}
+
+/* ---- dashed grid ------------------------------------------- */
+.grid{position:absolute;inset:0;pointer-events:none}
+.grid i{position:absolute}
+.grid .h{left:0;right:0;height:0;border-top:max(1px,calc(1*var(--u))) dashed var(--grid)}
+.grid .v{top:0;bottom:0;width:0;border-left:max(1px,calc(1*var(--u))) dashed rgba(255,255,255,.26)}
+.grid .h1{top:8.904%}   /* y 39  of 438 */
+.grid .h2{top:26.712%}  /* y 117        */
+.grid .h3{top:44.521%}  /* y 195        */
+.grid .h4{top:62.329%}  /* y 273        */
+.grid .h5{top:80.137%}  /* y 351        */
+.grid .h6{top:97.945%}  /* y 429        */
+.grid .v1{left:11.470%} /* x 64  of 558 */
+
+__BARS_CSS__
+
+/* ---- chart typography --------------------------------------- */
+/* “32%” · 40px · ink 292→367 of 558, top y 84 (x 880→955, y 168) */
+.stat{
+  position:absolute;
+  right:33.513%;
+  top:17.900%;
+  font-size:calc(40 * var(--u));
+  line-height:calc(42 * var(--u));
+  font-weight:500;
+  letter-spacing:calc(-3.0 * var(--u));
+  color:rgba(255,255,255,.93);
+  text-shadow:0 calc(1*var(--u)) calc(10*var(--u)) rgba(8,22,40,.34);
+  white-space:nowrap;
+}
+/* “Higher expansion revenue” · 12.3px · ink →273 of 558, top y 107 */
+.stat-label{
+  position:absolute;
+  right:51.075%;
+  top:23.744%;
+  font-size:calc(12.3 * var(--u));
+  line-height:calc(16 * var(--u));
+  font-weight:400;
+  letter-spacing:calc(0.04 * var(--u));
+  color:rgba(255,255,255,.95);
+  text-shadow:0 calc(1*var(--u)) calc(8*var(--u)) rgba(8,22,40,.40);
+  white-space:nowrap;
+}
+
+.sr-only{
+  position:absolute;width:1px;height:1px;overflow:hidden;
+  clip:rect(0 0 0 0);clip-path:inset(50%);white-space:nowrap;
+}
+
+/* ============================================================
+   PORTRAIT / COMPACT — stacked, still edge-to-edge.
+   The card absorbs all slack, so there is never a blank band.
+   ============================================================ */
+@media (max-aspect-ratio: 23/20){
+  :root{ --u: min(100vw / 430, 100vh / 880); }
+
+  .stage{display:flex;flex-direction:column}
+
+  .rule{position:static;inset:auto;flex:0 0 auto;margin:calc(30*var(--u)) calc(22*var(--u)) 0}
+
+  .col{
+    position:static;inset:auto;width:auto;flex:0 0 auto;
+    margin:calc(40*var(--u)) calc(22*var(--u)) 0;
+  }
+  .headline{
+    font-size:calc(31 * var(--u));
+    line-height:calc(43 * var(--u));
+    letter-spacing:calc(-0.5 * var(--u));
+    white-space:normal;
+  }
+  .headline .accent{display:inline}
+  .spacer{height:calc(34 * var(--u))}
+
+  .item{flex:0 0 auto}
+  .item:not(.open){padding:calc(17*var(--u)) 0}
+  .item.open{padding:0 0 calc(20*var(--u))}
+  .marker{
+    flex:0 0 calc(28*var(--u));
+    height:calc(18*var(--u));
+    margin-top:calc(-5*var(--u));
+    padding-left:calc(8*var(--u));
+  }
+  .item.open .marker{flex:0 0 calc(26*var(--u));padding-left:0}
+  .marker .sq{width:calc(13*var(--u));height:calc(13*var(--u))}
+  .marker .cv{width:calc(7*var(--u));height:calc(11*var(--u))}
+  .label{font-size:calc(17.5*var(--u));line-height:calc(23*var(--u))}
+  .desc{font-size:calc(12.5*var(--u));line-height:calc(17*var(--u));padding-top:calc(8*var(--u))}
+
+  .card{
+    position:relative;
+    inset:auto;                 /* drop the landscape anchors */
+    flex:1 1 auto;
+    min-height:calc(190 * var(--u));
+    margin:calc(34*var(--u)) 0 0 calc(22*var(--u));
+    border-radius:calc(10*var(--u)) 0 0 0;
+    overflow:hidden;
+  }
+  /* narrow card: stack the caption over the figure, both flush
+     with the primary bar's right edge (33.692% from the right) */
+  .stat{right:33.692%;top:13%;font-size:calc(42*var(--u));line-height:calc(44*var(--u))}
+  .stat-label{right:33.692%;top:5%;font-size:calc(13.5*var(--u));line-height:calc(17*var(--u))}
+}
+
+/* very short landscape (e.g. 1024×420) — keep type legible */
+@media (min-aspect-ratio: 23/20) and (max-height: 470px){
+  :root{ --u: min(100vh / 520, 100vw / 1000); }
+}
+
+@media (prefers-reduced-motion: reduce){
+  *{transition:none !important;animation:none !important}
+}
+</style>
+</head>
+<body>
+
+<main class="stage">
+
+  <div class="rule" role="presentation"></div>
+
+  <section class="col">
+    <h1 class="headline">
+      Built for every team that
+      <span class="accent">influences&nbsp;growth.</span>
+    </h1>
+
+    <div class="spacer" aria-hidden="true"></div>
+
+    <div class="acc">
+
+      <div class="item open">
+        <button class="row" type="button" aria-expanded="true">
+          <span class="marker" aria-hidden="true">
+            <svg class="sq" viewBox="0 0 12 12" fill="none">
+              <rect x=".7" y=".7" width="10.6" height="10.6" rx="1.4"/>
+            </svg>
+            <svg class="cv" viewBox="0 0 6 10" fill="none">
+              <path d="M0 0 L6 5 L0 10 Z"/>
+            </svg>
+          </span>
+          <span class="label">Product</span>
+        </button>
+        <p class="desc">Understand which features create loyal customers.</p>
+      </div>
+
+      <div class="item">
+        <button class="row" type="button" aria-expanded="false">
+          <span class="marker" aria-hidden="true">
+            <svg class="sq" viewBox="0 0 12 12" fill="none">
+              <rect x=".7" y=".7" width="10.6" height="10.6" rx="1.4"/>
+            </svg>
+            <svg class="cv" viewBox="0 0 6 10" fill="none">
+              <path d="M0 0 L6 5 L0 10 Z"/>
+            </svg>
+          </span>
+          <span class="label">Growth</span>
+        </button>
+        <p class="desc">See exactly where compounding acquisition comes from.</p>
+      </div>
+
+      <div class="item">
+        <button class="row" type="button" aria-expanded="false">
+          <span class="marker" aria-hidden="true">
+            <svg class="sq" viewBox="0 0 12 12" fill="none">
+              <rect x=".7" y=".7" width="10.6" height="10.6" rx="1.4"/>
+            </svg>
+            <svg class="cv" viewBox="0 0 6 10" fill="none">
+              <path d="M0 0 L6 5 L0 10 Z"/>
+            </svg>
+          </span>
+          <span class="label">Sales</span>
+        </button>
+        <p class="desc">Walk into every call knowing the account's real story.</p>
+      </div>
+
+      <div class="item">
+        <button class="row" type="button" aria-expanded="false">
+          <span class="marker" aria-hidden="true">
+            <svg class="sq" viewBox="0 0 12 12" fill="none">
+              <rect x=".7" y=".7" width="10.6" height="10.6" rx="1.4"/>
+            </svg>
+            <svg class="cv" viewBox="0 0 6 10" fill="none">
+              <path d="M0 0 L6 5 L0 10 Z"/>
+            </svg>
+          </span>
+          <span class="label">Customer Success</span>
+        </button>
+        <p class="desc">Catch churn risk while there is still time to act.</p>
+      </div>
+
+      <div class="item">
+        <button class="row" type="button" aria-expanded="false">
+          <span class="marker" aria-hidden="true">
+            <svg class="sq" viewBox="0 0 12 12" fill="none">
+              <rect x=".7" y=".7" width="10.6" height="10.6" rx="1.4"/>
+            </svg>
+            <svg class="cv" viewBox="0 0 6 10" fill="none">
+              <path d="M0 0 L6 5 L0 10 Z"/>
+            </svg>
+          </span>
+          <span class="label">Leadership</span>
+        </button>
+        <p class="desc">One number the whole company can steer by.</p>
+      </div>
+
+    </div>
+  </section>
+
+  <figure class="card">
+    __MESH_SVG__
+    <div class="mesh-film" aria-hidden="true"></div>
+
+    <div class="grid" aria-hidden="true">
+      <i class="h h1"></i><i class="h h2"></i><i class="h h3"></i>
+      <i class="h h4"></i><i class="h h5"></i><i class="h h6"></i>
+      <i class="v v1"></i>
+    </div>
+
+    <div class="bar-ghost" aria-hidden="true"></div>
+    <div class="bar-cap"   aria-hidden="true"></div>
+    <div class="bar-blue"  aria-hidden="true"></div>
+
+    <div class="stat-label">Higher expansion revenue</div>
+    <div class="stat">32%</div>
+
+    <figcaption class="sr-only">
+      Expansion revenue is 32% higher for teams using the product.
+    </figcaption>
+  </figure>
+
+</main>
+
+<script>
+/* Single-open accordion. Both marker glyphs are already in the DOM, so the
+   whole interaction is one class swap plus the matching aria state. */
+(function () {
+  var items = Array.prototype.slice.call(document.querySelectorAll('.item'));
+
+  function open(item) {
+    items.forEach(function (other) {
+      var isTarget = other === item;
+      other.classList.toggle('open', isTarget);
+      other.querySelector('.row').setAttribute('aria-expanded', String(isTarget));
+    });
+  }
+
+  items.forEach(function (item) {
+    item.querySelector('.row').addEventListener('click', function () {
+      if (!item.classList.contains('open')) open(item);
+    });
+  });
+})();
+</script>
+
+</body>
+</html>
