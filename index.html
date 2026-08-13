@@ -217,12 +217,20 @@ body{
   background:linear-gradient(180deg,rgba(255,255,255,.05) 0%,rgba(255,255,255,0) 32%,rgba(0,0,0,.045) 100%);
 }
 
-/* ---- dashed grid ------------------------------------------- */
+/* ---- chart grid -------------------------------------------- */
 .chart{position:absolute;inset:0;pointer-events:none}
 .grid{position:absolute;inset:0;pointer-events:none}
 .grid i{position:absolute}
 .grid .h{left:0;right:0;height:0;border-top:max(1px,calc(1*var(--u))) dashed var(--grid)}
-.grid .v{top:0;bottom:0;width:0;border-left:max(1px,calc(1*var(--u))) dashed rgba(255,255,255,.26)}
+.grid .v{
+  top:0;bottom:0;
+  width:max(1px,calc(1*var(--u)));
+  background:linear-gradient(180deg,
+    rgba(255,255,255,.02) 0%,
+    rgba(218,238,247,.12) 22%,
+    rgba(225,241,248,.28) 54%,
+    rgba(255,255,255,.72) 100%);
+}
 .grid .h1{top:8.904%}   /* y 39  of 438 */
 .grid .h2{top:26.712%}  /* y 117        */
 .grid .h3{top:44.521%}  /* y 195        */
@@ -239,11 +247,12 @@ body{
    the caption and the number sit at fixed offsets above it —
    20 / 40 / 62 px — so they ride along rather than animating
    separately. --bar-top is that value; everything else is calc()ed
-   off it. The ghost bar is static in the reference and stays static
-   here.
+   off it. The prototype's first bar uses its own menu-driven top value
+   so it can animate alongside the primary bar.
    ------------------------------------------------------------ */
 .card{
   --bar-top: 33.99%;          /* Product, the default state        */
+  --bar-one-top: 54.110%;     /* prototype height for first bar    */
   --cap-h: 3.082%;            /* cap segment height, 13.5px        */
   --label-op: 1;              /* caption cross-fade                */
 }
@@ -253,20 +262,19 @@ body{
 
 .bar-ghost,.bar-blue,.bar-cap{position:absolute}
 
-/* Frosted glass. Alpha falls .58 -> .40 down the bar and the tint
-   travels cool -> warm, following a backdrop that runs steel-blue at
-   the top and cream at the floor; a single flat wash cannot match
-   both ends. Stops fitted by render-measure-correct. */
+/* Translucent comparison bar. The lower-opacity milky wash keeps the
+   photograph visible through the column, matching the reference's
+   frosted-glass character without turning the bar into a solid block. */
 .bar-ghost{
-  left:29.831%;width:15.009%;top:54.110%;bottom:0;
+  left:29.831%;width:15.009%;top:var(--bar-one-top);bottom:0;
   background:linear-gradient(180deg,
-    rgba(228,241,255,0.58) 2.488%,
-    rgba(216,227,235,0.44) 49.751%,
-    rgba(249,250,246,0.40) 97.015%);
-  -webkit-backdrop-filter:blur(2px) saturate(106%);
-  backdrop-filter:blur(2px) saturate(106%);
-  box-shadow:inset 0 1px 0 rgba(255,255,255,.22),
-             inset 1px 0 0 rgba(255,255,255,.13);
+    rgba(202,220,233,.43) 0%,
+    rgba(220,232,238,.39) 54%,
+    rgba(240,241,235,.31) 100%);
+  -webkit-backdrop-filter:blur(1px) saturate(96%);
+  backdrop-filter:blur(1px) saturate(96%);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.12),
+             inset 1px 0 0 rgba(255,255,255,.08);
 }
 
 /* Opaque, no outer bloom — the reference keeps these edges crisp. */
@@ -397,7 +405,7 @@ body{
 
     <div class="acc">
 
-      <div class="item open" data-bar-top="33.99%" data-value="32"
+      <div class="item open" data-bar-top="33.99%" data-bar-one-top="54.11%" data-value="32"
            data-caption="Higher expansion revenue">
         <button class="row" type="button" aria-expanded="true">
           <span class="marker" aria-hidden="true">
@@ -413,7 +421,7 @@ body{
         <p class="desc">Understand which features create loyal customers.</p>
       </div>
 
-      <div class="item" data-bar-top="39.76%" data-value="41"
+      <div class="item" data-bar-top="39.76%" data-bar-one-top="47.50%" data-value="41"
            data-caption="Faster time to first value">
         <button class="row" type="button" aria-expanded="false">
           <span class="marker" aria-hidden="true">
@@ -429,7 +437,7 @@ body{
         <p class="desc">See which activation loops actually move revenue.</p>
       </div>
 
-      <div class="item" data-bar-top="44.01%" data-value="27"
+      <div class="item" data-bar-top="44.01%" data-bar-one-top="59.50%" data-value="27"
            data-caption="Larger average deal size">
         <button class="row" type="button" aria-expanded="false">
           <span class="marker" aria-hidden="true">
@@ -445,7 +453,7 @@ body{
         <p class="desc">Walk into every call knowing what to pitch next.</p>
       </div>
 
-      <div class="item" data-bar-top="50.38%" data-value="19"
+      <div class="item" data-bar-top="50.38%" data-bar-one-top="58.00%" data-value="19"
            data-caption="Lower gross churn">
         <button class="row" type="button" aria-expanded="false">
           <span class="marker" aria-hidden="true">
@@ -461,7 +469,7 @@ body{
         <p class="desc">Catch churn risk weeks before the renewal call.</p>
       </div>
 
-      <div class="item" data-bar-top="46.60%" data-value="24"
+      <div class="item" data-bar-top="46.60%" data-bar-one-top="51.00%" data-value="24"
            data-caption="Shorter planning cycles">
         <button class="row" type="button" aria-expanded="false">
           <span class="marker" aria-hidden="true">
@@ -523,10 +531,11 @@ body{
      caption    fades out over 160ms, swaps, fades back in 230-430ms
      cap        shrinks to nothing by 190ms, regrows 390-640ms
 
-   The chart is driven by a single value, --bar-top. In the reference
+   The primary chart is driven by --bar-top. In the reference
    the cap, the caption and the number keep fixed offsets above the
    bar's top edge in all four states, so they are positioned off that
-   one variable in CSS and ride along for free.
+   one variable in CSS and ride along for free. The prototype's first
+   bar follows the same timing with its independent --bar-one-top value.
    --------------------------------------------------------------- */
 (function () {
   var items = Array.prototype.slice.call(document.querySelectorAll('.item'));
@@ -548,6 +557,7 @@ body{
   var read = function (el) {
     return {
       top: parseFloat(el.getAttribute('data-bar-top')),
+      barOneTop: parseFloat(el.getAttribute('data-bar-one-top')),
       value: parseInt(el.getAttribute('data-value'), 10),
       caption: el.getAttribute('data-caption')
     };
@@ -556,8 +566,9 @@ body{
   var still = window.matchMedia('(prefers-reduced-motion: reduce)');
   var from = read(items[0]), to = from, raf = 0, swapped = true;
 
-  var paint = function (top, value, capH, labelOp) {
+  var paint = function (top, barOneTop, value, capH, labelOp) {
     card.style.setProperty('--bar-top', top.toFixed(3) + '%');
+    card.style.setProperty('--bar-one-top', barOneTop.toFixed(3) + '%');
     card.style.setProperty('--cap-h', capH.toFixed(3) + '%');
     card.style.setProperty('--label-op', labelOp.toFixed(3));
     statEl.textContent = Math.round(value) + '%';
@@ -565,7 +576,7 @@ body{
 
   var settle = function (st) {
     labelEl.textContent = st.caption;
-    paint(st.top, st.value, CAP_H, 1);
+    paint(st.top, st.barOneTop, st.value, CAP_H, 1);
   };
 
   var run = function (t0) {
@@ -573,6 +584,7 @@ body{
       var e = now - t0;
 
       var top = lerp(from.top, to.top, outCubic(clamp01(e / BAR_MS)));
+      var barOneTop = lerp(from.barOneTop, to.barOneTop, outCubic(clamp01(e / BAR_MS)));
       var val = lerp(from.value, to.value, outQuad(clamp01(e / NUM_MS)));
 
       var op;
@@ -588,7 +600,7 @@ body{
       else if (e < CAP_AT)  capH = 0;
       else                  capH = CAP_H * outCubic(clamp01((e - CAP_AT) / CAP_IN));
 
-      paint(top, val, capH, op);
+      paint(top, barOneTop, val, capH, op);
 
       if (e < Math.max(BAR_MS, NUM_MS, CAP_AT + CAP_IN, IN_AT + IN_MS)) {
         raf = requestAnimationFrame(step);
@@ -606,11 +618,12 @@ body{
       other.querySelector('.row').setAttribute('aria-expanded', String(is));
     });
     var next = read(item);
-    if (next.top === to.top && next.value === to.value) return;
+    if (next.top === to.top && next.barOneTop === to.barOneTop && next.value === to.value) return;
     if (raf) { cancelAnimationFrame(raf); raf = 0; }
     // resume from wherever the chart currently is, so rapid clicks stay smooth
     from = {
       top: parseFloat(card.style.getPropertyValue('--bar-top')) || from.top,
+      barOneTop: parseFloat(card.style.getPropertyValue('--bar-one-top')) || from.barOneTop,
       value: parseInt(statEl.textContent, 10),
       caption: labelEl.textContent
     };
