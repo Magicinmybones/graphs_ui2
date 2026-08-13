@@ -26,7 +26,7 @@ import numpy as np
 from PIL import Image, ImageFilter
 
 HERE = pathlib.Path(__file__).parent
-CARD_W, CARD_H = 558, 438
+CARD_W, CARD_H = 533, 438        # card box: 533 wide, right edge on the rule
 OUT_SCALE = 2                    # render the embed at 2x card size
 SOFTEN = 3                       # px at card scale
 
