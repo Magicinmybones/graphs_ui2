@@ -98,7 +98,7 @@ body{
   flex:0 0 auto;
   font-size:calc(27 * var(--u));
   line-height:calc(44 * var(--u));
-  font-weight:600;
+  font-weight:610;
   letter-spacing:calc(-0.60 * var(--u));
   color:var(--ink);
   white-space:nowrap;
@@ -107,24 +107,27 @@ body{
 .headline .accent{color:var(--blue);display:block}
 
 /* headline box bottom (167) → Product label box top (223.4) */
-.spacer{flex:0 0 auto;height:calc(56.4 * var(--u))}
+.spacer{flex:0 0 auto;height:calc(37.4 * var(--u))}
 
 /* ============================================================
    ACCORDION · rules at 288 / 352.25 / 416.5 / 480.75 / 545
    ============================================================ */
 .acc{display:flex;flex-direction:column}
 
+/* Rows measured off the reference: 65px closed, 81px open, with the
+   label's ink starting 23.5px below the row top in BOTH — so opening a
+   row does not shift its own label. Because exactly one row is open,
+   the accordion's total height is constant (4x65 + 81 = 341) and only
+   the divider directly below the open row moves. */
 .item{
   display:flex;
   flex-direction:column;
-  justify-content:center;
+  justify-content:flex-start;
+  padding-top:19px;                /* 19 + 4.5 ink offset = 23.5 */
   border-bottom:1px solid var(--divider);
 }
-/* closed rows sit on a 64px pitch; the label's cap-centre rides
-   5px above the row centre, as it does in the prototype */
-.item:not(.open){height:64px;padding-bottom:calc(10 * var(--u))}
-/* open row is intrinsic: label 21 + gap 7.1 + desc 15 + 18.5 + 1 = 62.6 */
-.item.open{padding-bottom:calc(18.5 * var(--u))}
+.item:not(.open){height:65px}
+.item.open{height:81px;padding-bottom:16px}
 
 .row{
   display:flex;
@@ -136,15 +139,18 @@ body{
 .row:focus-visible{outline:calc(2*var(--u)) solid var(--blue);outline-offset:calc(3*var(--u))}
 
 /* marker gutters: square → label at x48 · chevron → label at x50 */
+/* One gutter width for both states. Previously the closed rows used a
+   25px gutter with 7px of padding and the open row 23px with none, so
+   the labels started at different x — the reference has them flush. */
 .marker{
-  flex:0 0 calc(25 * var(--u));
-  height:calc(16 * var(--u));
+  flex:0 0 23px;
+  height:16px;
   display:flex;
   align-items:center;
-  padding-left:calc(7 * var(--u));
-  margin-top:calc(-4.6 * var(--u));   /* align glyph to cap-centre */
+  padding-left:2.7px;                /* chevron indent, per the reference */
+  margin-top:-4.6px;                 /* align glyph to the label cap-centre */
 }
-.item.open .marker{flex:0 0 calc(23 * var(--u));padding-left:0}
+.item.open .marker{padding-left:0}   /* the square sits flush left */
 
 /* both glyphs live in the DOM; CSS picks one, so opening a row is a class
    toggle rather than a DOM rebuild */
@@ -160,21 +166,21 @@ body{
 .label{
   font-size:calc(16.5 * var(--u));
   line-height:calc(21 * var(--u));
-  font-weight:400;
+  font-weight:500;
   letter-spacing:calc(-0.08 * var(--u));
   color:var(--ink-row);
   transition:color .18s ease;
 }
-.item.open .label{color:var(--blue);font-weight:550}
+.item.open .label{color:var(--blue);font-weight:620}
 
 /* description · 10.9px / 15px · #6f7680 · ink 25→288 */
 .desc{
   font-size:calc(10.9 * var(--u));
   line-height:calc(15 * var(--u));
-  font-weight:400;
+  font-weight:420;
   letter-spacing:calc(0.02 * var(--u));
   color:var(--muted);
-  padding-top:calc(7.1 * var(--u));
+  padding-top:calc(8.9 * var(--u));
   overflow:hidden;
 }
 .item:not(.open) .desc{display:none}
@@ -212,6 +218,7 @@ body{
 }
 
 /* ---- dashed grid ------------------------------------------- */
+.chart{position:absolute;inset:0;pointer-events:none}
 .grid{position:absolute;inset:0;pointer-events:none}
 .grid i{position:absolute}
 .grid .h{left:0;right:0;height:0;border-top:max(1px,calc(1*var(--u))) dashed var(--grid)}
@@ -224,34 +231,93 @@ body{
 .grid .h6{top:97.945%}  /* y 429        */
 .grid .v1{left:11.470%} /* x 64  of 558 */
 
-__BARS_CSS__
+/* ---- chart ---------------------------------------------------
+   Card is 533 x 438. Percentages below are of that box.
 
-/* ---- chart typography --------------------------------------- */
-/* “32%” · 40px · ink 292→367 of 558, top y 84 (x 880→955, y 168) */
+   The reference drives the whole chart from ONE value: the primary
+   bar's top edge. Measured across all four states, the cap segment,
+   the caption and the number sit at fixed offsets above it —
+   20 / 40 / 62 px — so they ride along rather than animating
+   separately. --bar-top is that value; everything else is calc()ed
+   off it. The ghost bar is static in the reference and stays static
+   here.
+   ------------------------------------------------------------ */
+.card{
+  --bar-top: 33.99%;          /* Product, the default state        */
+  --cap-h: 3.082%;            /* cap segment height, 13.5px        */
+  --label-op: 1;              /* caption cross-fade                */
+}
+
+/* offsets above the bar top, as fractions of the 438px card height */
+.chart{ --d-cap: 4.566%; --d-label: 9.938%; --d-stat: 15.630%; }
+
+.bar-ghost,.bar-blue,.bar-cap{position:absolute}
+
+/* Frosted glass. Alpha falls .58 -> .40 down the bar and the tint
+   travels cool -> warm, following a backdrop that runs steel-blue at
+   the top and cream at the floor; a single flat wash cannot match
+   both ends. Stops fitted by render-measure-correct. */
+.bar-ghost{
+  left:29.831%;width:15.009%;top:54.110%;bottom:0;
+  background:linear-gradient(180deg,
+    rgba(228,241,255,0.58) 2.488%,
+    rgba(216,227,235,0.44) 49.751%,
+    rgba(249,250,246,0.40) 97.015%);
+  -webkit-backdrop-filter:blur(2px) saturate(106%);
+  backdrop-filter:blur(2px) saturate(106%);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.22),
+             inset 1px 0 0 rgba(255,255,255,.13);
+}
+
+/* Opaque, no outer bloom — the reference keeps these edges crisp. */
+.bar-blue{
+  left:54.409%;width:15.009%;
+  top:var(--bar-top);bottom:0;
+  background:linear-gradient(180deg,
+    rgb(27,101,225) 2.768%,
+    rgb(20,89,211) 33.910%,
+    rgb(17,79,198) 65.052%,
+    rgb(13,74,184) 97.924%);
+  box-shadow:inset 1.2px 0 0 rgba(255,255,255,.10);
+}
+
+/* Nothing is drawn between cap and bar: the photograph shows through. */
+.bar-cap{
+  left:54.409%;width:15.009%;
+  top:calc(var(--bar-top) - var(--d-cap));
+  height:var(--cap-h);
+  background:rgb(26,104,230);
+  box-shadow:inset 1.2px 0 0 rgba(255,255,255,.12);
+}
+
+/* ---- chart typography ---------------------------------------
+   Both right-aligned; their vertical position rides on --bar-top.
+   ------------------------------------------------------------ */
 .stat{
   position:absolute;
-  right:33.513%;
-  top:17.900%;
-  font-size:calc(40 * var(--u));
-  line-height:calc(42 * var(--u));
+  right:31.20%;
+  top:calc(var(--bar-top) - var(--d-stat));
+  font-size:40px;
+  line-height:42px;
   font-weight:500;
-  letter-spacing:calc(-3.0 * var(--u));
+  letter-spacing:-3.0px;
   color:rgba(255,255,255,.93);
-  text-shadow:0 calc(1*var(--u)) calc(10*var(--u)) rgba(8,22,40,.34);
+  text-shadow:0 1px 10px rgba(8,22,40,.34);
   white-space:nowrap;
+  font-variant-numeric:tabular-nums;   /* digits must not jitter while counting */
 }
-/* “Higher expansion revenue” · 12.3px · ink →273 of 558, top y 107 */
 .stat-label{
   position:absolute;
-  right:51.075%;
-  top:23.744%;
-  font-size:calc(12.3 * var(--u));
-  line-height:calc(16 * var(--u));
+  right:48.50%;
+  top:calc(var(--bar-top) - var(--d-label));
+  font-size:12.3px;
+  line-height:16px;
   font-weight:400;
-  letter-spacing:calc(0.04 * var(--u));
+  letter-spacing:0.04px;
   color:rgba(255,255,255,.95);
-  text-shadow:0 calc(1*var(--u)) calc(8*var(--u)) rgba(8,22,40,.40);
+  text-shadow:0 1px 8px rgba(8,22,40,.40);
   white-space:nowrap;
+  opacity:var(--label-op);
 }
 
 .sr-only{
@@ -331,7 +397,8 @@ __BARS_CSS__
 
     <div class="acc">
 
-      <div class="item open">
+      <div class="item open" data-bar-top="33.99%" data-value="32"
+           data-caption="Higher expansion revenue">
         <button class="row" type="button" aria-expanded="true">
           <span class="marker" aria-hidden="true">
             <svg class="sq" viewBox="0 0 12 12" fill="none">
@@ -346,7 +413,8 @@ __BARS_CSS__
         <p class="desc">Understand which features create loyal customers.</p>
       </div>
 
-      <div class="item">
+      <div class="item" data-bar-top="39.76%" data-value="41"
+           data-caption="Faster time to first value">
         <button class="row" type="button" aria-expanded="false">
           <span class="marker" aria-hidden="true">
             <svg class="sq" viewBox="0 0 12 12" fill="none">
@@ -358,10 +426,11 @@ __BARS_CSS__
           </span>
           <span class="label">Growth</span>
         </button>
-        <p class="desc">See exactly where compounding acquisition comes from.</p>
+        <p class="desc">See which activation loops actually move revenue.</p>
       </div>
 
-      <div class="item">
+      <div class="item" data-bar-top="44.01%" data-value="27"
+           data-caption="Larger average deal size">
         <button class="row" type="button" aria-expanded="false">
           <span class="marker" aria-hidden="true">
             <svg class="sq" viewBox="0 0 12 12" fill="none">
@@ -373,10 +442,11 @@ __BARS_CSS__
           </span>
           <span class="label">Sales</span>
         </button>
-        <p class="desc">Walk into every call knowing the account's real story.</p>
+        <p class="desc">Walk into every call knowing what to pitch next.</p>
       </div>
 
-      <div class="item">
+      <div class="item" data-bar-top="50.38%" data-value="19"
+           data-caption="Lower gross churn">
         <button class="row" type="button" aria-expanded="false">
           <span class="marker" aria-hidden="true">
             <svg class="sq" viewBox="0 0 12 12" fill="none">
@@ -388,10 +458,11 @@ __BARS_CSS__
           </span>
           <span class="label">Customer Success</span>
         </button>
-        <p class="desc">Catch churn risk while there is still time to act.</p>
+        <p class="desc">Catch churn risk weeks before the renewal call.</p>
       </div>
 
-      <div class="item">
+      <div class="item" data-bar-top="46.60%" data-value="24"
+           data-caption="Shorter planning cycles">
         <button class="row" type="button" aria-expanded="false">
           <span class="marker" aria-hidden="true">
             <svg class="sq" viewBox="0 0 12 12" fill="none">
@@ -419,12 +490,13 @@ __BARS_CSS__
       <i class="v v1"></i>
     </div>
 
-    <div class="bar-ghost" aria-hidden="true"></div>
-    <div class="bar-cap"   aria-hidden="true"></div>
-    <div class="bar-blue"  aria-hidden="true"></div>
-
-    <div class="stat-label">Higher expansion revenue</div>
-    <div class="stat">32%</div>
+    <div class="chart" aria-hidden="true">
+      <div class="bar-ghost"></div>
+      <div class="bar-cap"></div>
+      <div class="bar-blue"></div>
+      <div class="stat-label">Higher expansion revenue</div>
+      <div class="stat">32%</div>
+    </div>
 
     <figcaption class="sr-only">
       Expansion revenue is 32% higher for teams using the product.
@@ -436,24 +508,124 @@ __BARS_CSS__
 </main>
 
 <script>
-/* Single-open accordion. Both marker glyphs are already in the DOM, so the
-   whole interaction is one class swap plus the matching aria state. */
+/* ---------------------------------------------------------------
+   Accordion + chart animation.
+
+   Timings and easings below were measured frame by frame off the
+   reference recording at 60fps, not chosen by feel:
+
+     bar top    370ms  easeOutCubic  (rms 0.039 over three transitions;
+                                      easeOutCubic beat every other named
+                                      easing by more than 2x)
+     number     800ms  easeOutQuad   (every one of nine digit steps lands
+                                      within a frame of the measurement)
+     caption    fades out over 160ms, swaps, fades back in 230-430ms
+     cap        shrinks to nothing by 190ms, regrows 390-640ms
+
+   The chart is driven by a single value, --bar-top. In the reference
+   the cap, the caption and the number keep fixed offsets above the
+   bar's top edge in all four states, so they are positioned off that
+   one variable in CSS and ride along for free.
+   --------------------------------------------------------------- */
 (function () {
   var items = Array.prototype.slice.call(document.querySelectorAll('.item'));
+  var card  = document.querySelector('.card');
+  var statEl = document.querySelector('.stat');
+  var labelEl = document.querySelector('.stat-label');
+  if (!items.length || !card) return;
 
-  function open(item) {
+  var BAR_MS = 370, NUM_MS = 800;
+  var OUT_MS = 160, IN_AT = 230, IN_MS = 200;
+  var CAP_OUT = 190, CAP_AT = 390, CAP_IN = 250;
+  var CAP_H = 3.082;                       // settled cap height, % of card
+
+  var outCubic = function (t) { return 1 - Math.pow(1 - t, 3); };
+  var outQuad  = function (t) { return 1 - Math.pow(1 - t, 2); };
+  var clamp01  = function (v) { return v < 0 ? 0 : v > 1 ? 1 : v; };
+  var lerp     = function (a, b, t) { return a + (b - a) * t; };
+
+  var read = function (el) {
+    return {
+      top: parseFloat(el.getAttribute('data-bar-top')),
+      value: parseInt(el.getAttribute('data-value'), 10),
+      caption: el.getAttribute('data-caption')
+    };
+  };
+
+  var still = window.matchMedia('(prefers-reduced-motion: reduce)');
+  var from = read(items[0]), to = from, raf = 0, swapped = true;
+
+  var paint = function (top, value, capH, labelOp) {
+    card.style.setProperty('--bar-top', top.toFixed(3) + '%');
+    card.style.setProperty('--cap-h', capH.toFixed(3) + '%');
+    card.style.setProperty('--label-op', labelOp.toFixed(3));
+    statEl.textContent = Math.round(value) + '%';
+  };
+
+  var settle = function (st) {
+    labelEl.textContent = st.caption;
+    paint(st.top, st.value, CAP_H, 1);
+  };
+
+  var run = function (t0) {
+    var step = function (now) {
+      var e = now - t0;
+
+      var top = lerp(from.top, to.top, outCubic(clamp01(e / BAR_MS)));
+      var val = lerp(from.value, to.value, outQuad(clamp01(e / NUM_MS)));
+
+      var op;
+      if (e < OUT_MS)      op = 1 - outQuad(e / OUT_MS);
+      else if (e < IN_AT)  op = 0;
+      else                 op = outQuad(clamp01((e - IN_AT) / IN_MS));
+
+      // swap the text while it is invisible
+      if (!swapped && e >= OUT_MS) { labelEl.textContent = to.caption; swapped = true; }
+
+      var capH;
+      if (e < CAP_OUT)      capH = CAP_H * (1 - outQuad(e / CAP_OUT));
+      else if (e < CAP_AT)  capH = 0;
+      else                  capH = CAP_H * outCubic(clamp01((e - CAP_AT) / CAP_IN));
+
+      paint(top, val, capH, op);
+
+      if (e < Math.max(BAR_MS, NUM_MS, CAP_AT + CAP_IN, IN_AT + IN_MS)) {
+        raf = requestAnimationFrame(step);
+      } else {
+        raf = 0; from = to; settle(to);
+      }
+    };
+    raf = requestAnimationFrame(step);
+  };
+
+  var open = function (item) {
     items.forEach(function (other) {
-      var isTarget = other === item;
-      other.classList.toggle('open', isTarget);
-      other.querySelector('.row').setAttribute('aria-expanded', String(isTarget));
+      var is = other === item;
+      other.classList.toggle('open', is);
+      other.querySelector('.row').setAttribute('aria-expanded', String(is));
     });
-  }
+    var next = read(item);
+    if (next.top === to.top && next.value === to.value) return;
+    if (raf) { cancelAnimationFrame(raf); raf = 0; }
+    // resume from wherever the chart currently is, so rapid clicks stay smooth
+    from = {
+      top: parseFloat(card.style.getPropertyValue('--bar-top')) || from.top,
+      value: parseInt(statEl.textContent, 10),
+      caption: labelEl.textContent
+    };
+    to = next;
+    if (still.matches) { settle(to); from = to; return; }
+    swapped = false;
+    run(performance.now());
+  };
 
   items.forEach(function (item) {
     item.querySelector('.row').addEventListener('click', function () {
       if (!item.classList.contains('open')) open(item);
     });
   });
+
+  settle(from);
 })();
 </script>
 
